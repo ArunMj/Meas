@@ -19,12 +19,13 @@ def check_event(content):
 
 app = Flask(__name__)
 
-@app.route('/', methods=['POST'])
+@app.route('/XXXX', methods=['POST'])
 def notify():
     content = request.get_json(silent=True)
     print content
-    check_event(content)
-    return jsonify({'notify': 'success'}), 201
-
+    # check_event(content)
+    #return jsonify({'notify': 'success'}), 201
+    return 'ok',200
 if __name__ == '__main__':
+    print "running server"
     app.run(host='0.0.0.0', port=7080, debug=True)

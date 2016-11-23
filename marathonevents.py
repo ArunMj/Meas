@@ -1,5 +1,8 @@
 import json
 from logger import log
+
+from utils import conv_datestring
+
 class MarathonEventBase(object):
     """
     """
@@ -12,7 +15,7 @@ class MarathonEventBase(object):
             `eventType` and `timestamp` are always present keys
         """
         self.event_type = eventType  # All events have these two attributes
-        self.timestamp = timestamp
+        self.timestamp = conv_datestring(timestamp)
         
         for attribute_name in self.KNOWN_ATTRIBUTES:
             attribute = kwargs.get(attribute_name,None)
@@ -26,7 +29,9 @@ class MarathonEventBase(object):
         attrstring = '\n\t'.join([attribute + " : " + str(getattr(self, attribute)) 
                                     for attribute in self.KNOWN_ATTRIBUTES]
                      )
-        return tstring.format(type=self.event_type.upper(), time=self.timestamp, attr=attrstring)
+        return tstring.format(type=self.event_type.upper(),
+                              time=self.timestamp.strftime("%d-%m-%y %H:%M:%S.%f UTC"),
+                              attr=attrstring)
     
     
 
@@ -106,8 +111,11 @@ class MarathonEventStreamDetached(MarathonEventBase):
 class MarathonUnhealthyTaskKillEvent(MarathonEventBase):
     KNOWN_ATTRIBUTES = ['appId', 'taskId', 'version', 'reason']
 
+class MarathonAppTerminatedEvent(MarathonEventBase):
+    KNOWN_ATTRIBUTES = ['appId']
 
-
+class MarathonSchedulerRegisteredEvent(MarathonEventBase):
+    KNOWN_ATTRIBUTES = ['master','frameworkId']
 
 
 class EventFactory:
@@ -137,6 +145,8 @@ class EventFactory:
         'deployment_step_failure': MarathonDeploymentStepFailure,
         'event_stream_attached': MarathonEventStreamAttached,
         'event_stream_detached': MarathonEventStreamDetached,
+        'scheduler_registered_event':MarathonSchedulerRegisteredEvent,
+        'app_terminated_event': MarathonAppTerminatedEvent
     }
 
     def process(self, event_json_str):
