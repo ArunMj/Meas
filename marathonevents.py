@@ -30,7 +30,7 @@ class MarathonEventBase(object):
                                     for attribute in self.KNOWN_ATTRIBUTES]
                      )
         return tstring.format(type=self.event_type.upper(),
-                              time=self.timestamp.strftime("%d-%m-%y %H:%M:%S.%f UTC"),
+                              time=(str(self.timestamp) + ' UTC'),
                               attr=attrstring)
     
     
@@ -145,6 +145,7 @@ class EventFactory:
         'deployment_step_failure': MarathonDeploymentStepFailure,
         'event_stream_attached': MarathonEventStreamAttached,
         'event_stream_detached': MarathonEventStreamDetached,
+
         'scheduler_registered_event':MarathonSchedulerRegisteredEvent,
         'app_terminated_event': MarathonAppTerminatedEvent
     }
@@ -159,4 +160,11 @@ class EventFactory:
             else:
                 raise Exception('Unknown event_type: {}, data: {}'.format(event_type, event_json))
         except Exception as oops:
+            import sys
+            print event_json_str
+            log.error("Could not process event data",oops)
+            
+            print event_json
+            print event_type
+            print "%$%^$%^#%$#%$#%$$^%&*&^&$#%$$^&%^&*^*&^^$%^$^&%&*^*&"
             log.error("Could not process event data",oops)

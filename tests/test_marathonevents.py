@@ -16,11 +16,9 @@ sample_event =  """
 
 def test_EventFactory():
     ef = EventFactory()
-
     eventobj = ef.process(sample_event)
-
+    assert eventobj.taskStatus == 'TASK_RUNNING'
     print eventobj.stringify()
-
 
 if __name__ == '__main__':
     test_EventFactory()

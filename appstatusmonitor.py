@@ -1,14 +1,23 @@
 from  collections import defaultdict
 from marathonevents import MarathonStatusUpdateEvent
-
-
+from datetime import datetime as dt,timedelta as td
+from alertmanager import Alert
+from mailalert import EmailCore
+import template
 
 def send_alert(appid,eventlist):
-    t =''
-    for events in eventlist:
-        t += '\t'+str(events.timestamp)+'\n'
-
-    print t
+    body = template.getbody(appid,eventlist)
+    subj = template.getsubject(appid)
+    # print subj
+    # print 'writing body.....'
+    with open('mail.html','w') as f:
+        f.write(body)
+    print "sending mail......"
+    ec = EmailCore()
+    ec.set_mailheader(subject=subj,toaddrlist='mjhack08@gmail.com',fromaddr='marathon-alert@flytxt.com')
+    ec.set_recipients(['mjhack08@gmail.com'])
+    ec.prepare_html_body(body)
+    print ("success" if  ec.send('postbud220.trv.flytxt.com',25) else "failed")
 
 class AppStatusRecorder(object):
     
@@ -24,34 +33,47 @@ class AppStatusRecorder(object):
         """
         if not isinstance(event,MarathonStatusUpdateEvent):
             return
-
+        print event.taskStatus,repr(event)
         if event.taskStatus not in cls.TERMINAL_STATES:
-            print event.taskStatus
             return
-        print "bad"
+
         app_id = event.appId
         event_time = event.timestamp
         cls.critical_event_bucket[app_id].append(event)
-        cls.check_app_health(app_id,4)
+        cls.alert_app_status(app_id)
         
     @classmethod
-    def check_app_health(cls,appid,level):
-        
-        if not  cls.critical_event_bucket.has_key(appid):
+    def alert_app_status(cls,appid):
+        if not cls.critical_event_bucket.has_key(appid):
             return
         eventlist = cls.critical_event_bucket[appid]
-
-        if len(eventlist) > 4:
+        print "$$$$"
+        count = cls.get_rate_of_failure(eventlist)
+        print "RATE",count
+        if count > 4:
             print "sends alert for ",appid
             send_alert(appid,eventlist)
             print "deletes eventlist of ",appid
             del eventlist[:]
-        
-
-
 
     @classmethod
     def delete_app_record(cls,appid):
         cls.critical_event_bucket.pop(appid,None)
+
+    @staticmethod
+    def get_rate_of_failure(eventlist,lastxseconds=300):
+        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx"
+        rate = 0
+        now = dt.utcnow()
+        from_time = now- td(seconds=lastxseconds)
+        print now,from_time
+        #print eventlist
+        for e in eventlist:
+            print repr(e.timestamp)
+            if e.timestamp >= from_time:
+                rate+=1
+        return rate
+
+
         
 

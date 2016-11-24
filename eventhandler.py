@@ -1,4 +1,4 @@
-from marathonevents import *
+from marathonevents import EventFactory
 from logger import log
 import BaseHTTPServer
 import time

@@ -28,7 +28,7 @@ class EmailCore(object):
         self.mail['BCC'] = ','.join(self._makelist(bcclist))
         self.mail.preamble = 'You will not see this in a MIME-aware mail reader.\n'
         self._isheaderOK = True
-        print self. mail
+        #print self. mail
 
     def set_recipients(self, recipients_list):
         if len(recipients_list) == 0:
@@ -55,7 +55,7 @@ class EmailCore(object):
             raise Exception(
                     "No mail-header details has set.")
         frm =self.mail['From']
-        print 'from',frm
+        #print 'from',frm
         s = smtplib.SMTP(host, port)
         s.sendmail(
             frm,
@@ -78,7 +78,8 @@ class MailAlert(EmailCore):
     
 if __name__ == '__main__':
     ec = EmailCore()
-    ec.set_mailheader(subject='test',toaddrlist='x@y.com',fromaddr='noreplay@y.com')
-    ec.set_recipients(['arun.muraleedharan@flytxt.com'])
+    ec.set_mailheader(subject='test',toaddrlist='mjhack08@gmail.com',fromaddr='noreplay@marathon.alert')
+    ec.set_recipients(['mjhack08@gmail.com'])
     ec.prepare_text_body("hello world")
+    ec.prepare_html_body("<h1><b>test</b></h1>")
     print ec.send('postbud220.trv.flytxt.com',25)
