@@ -1,0 +1,6 @@
+#requests
+#argparse
+####smtplib
+#email
+####mimetypes
+####BaseHTTPServer
