@@ -14,10 +14,18 @@ class EventHandler (BaseHTTPServer.BaseHTTPRequestHandler):
         content_length = int(self.headers['Content-Length'])
         data =  self.rfile.read(content_length)
         event = event_factory.process(data)
-        #print self.headers
-        # if event : #and hasattr(event,'version'):
-        #     log.info("event post recieved\n"  + event.stringify())
-        AppStatusRecorder.add_event(event)
+
+        if  isinstance(event,MarathonStatusUpdateEvent):
+            AppStatusRecorder.add_event(event)
+
+        # elif:  add here other event flows
+        #  ..............
+
+        else:
+            # some events are unhandled.
+            log.debug('unaccounted event : ' + repr(event))
+
+
         self.send_response(201)
         self.send_header('Content-type','application/json')
         self.end_headers()

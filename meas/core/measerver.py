@@ -9,7 +9,6 @@ class AsyncHTTPServer(SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer):
     """
     pass 
       
-
 class MeasServer(object):
 
     def __init__(self,host='0.0.0.0',port=7080,marathonlists=None):
@@ -21,7 +20,6 @@ class MeasServer(object):
         log.info('serving at {host}:{port}'.format(host=self.host, port=self.port))
         self._asyncServer.serve_forever()
         log.warn('server stoped')
-
 
 if __name__ == '__main__':
     pass

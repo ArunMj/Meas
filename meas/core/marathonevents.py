@@ -33,6 +33,9 @@ class MarathonEventBase(object):
                               time=(str(self.timestamp) + ' UTC'),
                               attr=attrstring)
     
+    def __repr__(self):
+        return "<%s@%s>" % (self.event_type,self.timestamp)
+    
     
 
 class MarathonApiPostEvent(MarathonEventBase):

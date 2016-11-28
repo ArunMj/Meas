@@ -1,15 +1,31 @@
+
+"""
+  if an app failes multipple times this alert is triggered.
+"""
+
 from datetime import datetime as dt
 marathonhost = 'localhost'
 
-
-def getsubject(appid):
+def getsubject(**kwargs):
+  """
+    param1 : appid
+  """
+  appid = kwargs['appid']
   return (
     'marathon@'+ marathonhost+ '_'+  
       dt.utcnow().strftime('%Y-%m-%dT%H:%M:%S UTC:')
         + ' "'+appid+'"' + ' FAILED'
   )
 
-def getbody(appid,eventlist):
+def getbody(**kwargs):
+  """
+    param1 : appid
+    param2:  eventlist
+  """
+
+  appid = kwargs['appid']
+  eventlist = kwargs['eventlist']
+
   fillups ={}
   fillups['ctime'] =  dt.utcnow().strftime('%c') + ' UTC'
   table_body = ""

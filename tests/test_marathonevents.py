@@ -1,4 +1,4 @@
-from marathonevents import *
+from  meas.core.marathonevents import *
 
 sample_event =  """
                         {
@@ -17,8 +17,11 @@ sample_event =  """
 def test_EventFactory():
     ef = EventFactory()
     eventobj = ef.process(sample_event)
-    assert eventobj.taskStatus == 'TASK_RUNNING'
+    assert eventobj.appId == "/my-app"
+    assert eventobj.ports == [31372]
     print eventobj.stringify()
+    print repr(eventobj)
+    
 
 if __name__ == '__main__':
     test_EventFactory()

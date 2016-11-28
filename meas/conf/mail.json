@@ -1,0 +1,16 @@
+{
+"email": {
+    "from": "alert@marathon.test",
+    "to":  ["mjhack08@gmail.com"],
+    "cc": ["mjhack01@gmail.com"],
+    "bcc": [],
+    "subject_pefix": "prf"
+    },
+
+
+
+"smtp": {
+    "host": "postbud220.trv.flytxt.com",
+    "port": 25
+    }
+}

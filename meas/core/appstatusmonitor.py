@@ -1,9 +1,14 @@
-from  collections import defaultdict
+"""
+accounts events of type `MarathonStatusUpdateEvent`
+
+"""
+
+from collections import defaultdict
 from marathonevents import MarathonStatusUpdateEvent
 from datetime import datetime as dt,timedelta as td
-from alertmanager import Alert
-from mailalert import EmailCore
-import template
+
+from email_templates import template
+
 
 def send_alert(appid,eventlist):
     body = template.getbody(appid,eventlist)
@@ -19,6 +24,7 @@ def send_alert(appid,eventlist):
     ec.prepare_html_body(body)
     print ("success" if  ec.send('postbud220.trv.flytxt.com',25) else "failed")
 
+
 class AppStatusRecorder(object):
     
     # appid:eventlist
@@ -28,12 +34,11 @@ class AppStatusRecorder(object):
 
     @classmethod
     def add_event(cls,event):
+
         """
         Accepts MarathonStatusUpdateEvent
         """
-        if not isinstance(event,MarathonStatusUpdateEvent):
-            return
-        print event.taskStatus,repr(event)
+
         if event.taskStatus not in cls.TERMINAL_STATES:
             return
 
@@ -62,7 +67,6 @@ class AppStatusRecorder(object):
 
     @staticmethod
     def get_rate_of_failure(eventlist,lastxseconds=300):
-        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx"
         rate = 0
         now = dt.utcnow()
         from_time = now- td(seconds=lastxseconds)
