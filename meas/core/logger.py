@@ -1,16 +1,20 @@
 import traceback
+import sys
+
 class LOG():
     def info(self,p,*args):
-        print p
+        sys.stdout.write(p + '\n')
+
     def debug(self,p,*args):
-        print p
+        sys.stdout.write(p + '\n')
+
     def warn(self,p,*args):
-        print p
+        sys.stdout.write(p + '\n')
+
     def error(self,p,*args):
-        print p
+        sys.stderr.write(p + '\n')
         traceback.print_exc()
 
 log =  LOG()
-
 
 __all__ = [log]

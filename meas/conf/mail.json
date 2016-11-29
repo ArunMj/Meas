@@ -1,10 +1,10 @@
 {
 "email": {
     "from": "alert@marathon.test",
-    "to":  ["mjhack08@gmail.com"],
+    "to":  ["mjhack08@gmail.com","mjhack04@gmail.com"],
     "cc": ["mjhack01@gmail.com"],
     "bcc": [],
-    "subject_pefix": "prf"
+    "subject_pefix": "testEnv"
     },
 
 

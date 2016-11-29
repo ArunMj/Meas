@@ -7,8 +7,8 @@ class AsyncHTTPServer(SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer):
     """
     inherites from ThreadingMixIn to get asynchronous serving of requests
     """
-    pass 
-      
+
+     
 class MeasServer(object):
 
     def __init__(self,host='0.0.0.0',port=7080,marathonlists=None):

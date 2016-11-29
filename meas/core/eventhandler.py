@@ -1,4 +1,4 @@
-from marathonevents import EventFactory
+from marathonevents import EventFactory,MarathonStatusUpdateEvent
 from logger import log
 import BaseHTTPServer
 import time
@@ -31,3 +31,7 @@ class EventHandler (BaseHTTPServer.BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write('{"notify": "success""}')
         return
+
+    def log_request(self, code='-', size='-'):
+        #self.log_message('"%s" %s %s',self.requestline, str(code), str(size))
+        pass 

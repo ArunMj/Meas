@@ -1,37 +1,107 @@
+from datetime import datetime as dt
 
 """
   if an app failes multipple times this alert is triggered.
 """
 
-from datetime import datetime as dt
-marathonhost = 'localhost'
+timeWindow = {
+            "delta" : 60,
+            "indication" : { 3:["ORANGE","WARNING"],
+                             5:["PINK","CRITICAL"],
+                             8:["TOMATO","FATAL"]
+                           }
+             }
 
-def getsubject(**kwargs):
-  """
-    param1 : appid
-  """
-  appid = kwargs['appid']
+
+body = """ 
+            <br><br>
+            Hi team,
+            <br>
+            <b>Application "{appid}" have been failed multiple times</b>
+            <br><br>
+            <div>
+              <table>
+              <tbody>
+
+                  <tr bgcolor="THISTLE">
+                    <td align="left"><b>{ctime}</b></td>
+                    <td align="right"><b>{appid}</b></td>
+                  </tr>
+
+                  <tr>
+                    <td colspan="2"align="center"bgcolor="{alertcolor}"><b>{alertlevel}</b></td>
+                  </tr>
+
+                  <tr>
+                    <td colspan="2"align="center">Failure History<br>
+                      <table border="1" style= "border-collapse:collapse">
+                        <tbody>
+                          <tr>
+                            <th style="padding-left:10px;padding-right:10px"><u>timestamp</u></th>
+                            <th style="padding-left:10px;padding-right:10px"><u>taskStatus</u></th>
+                            <th style="padding-left:10px;padding-right:10px"><u>host</u></th>
+                            <th style="padding-left:10px;padding-right:10px"><u>ports</u></th>
+                            <th style="padding-left:10px;padding-right:10px"><u>version</u></th>
+                            <th style="padding-left:10px;padding-right:10px"><u>slaveid</u></th>
+                            <th style="padding-left:10px;padding-right:10px"><u>message</u></th>
+                          </tr>
+                          {table_body}
+                        </tbody>
+                      </table>
+                    </td>
+                  </tr>
+
+              </tbody>
+              </table>
+            </div>
+
+            </div><br></div>
+"""
+
+
+# ------------------------------------------------------------------------------------------------------
+def getsubject(appid):
   return (
-    'marathon@'+ marathonhost+ '_'+  
-      dt.utcnow().strftime('%Y-%m-%dT%H:%M:%S UTC:')
-        + ' "'+appid+'"' + ' FAILED'
-  )
+          '_alert_{stime} : {appid} - FAILED MULTIPLE TIMES'
+              .format(stime=dt.utcnow().strftime('%Y-%m-%dT%H:%M:%S UTC'),appid=appid)
+          )
 
-def getbody(**kwargs):
-  """
-    param1 : appid
-    param2:  eventlist
-  """
 
-  appid = kwargs['appid']
-  eventlist = kwargs['eventlist']
-
+def getbody(appid,AppStatusRecorder):
   fillups ={}
+
+  lastxseconds = timeWindow['delta']
+  eventlist = AppStatusRecorder.get_events_in_last_xseconds(appid,lastxseconds=lastxseconds)
+  #                                   filter_predicate=lambda e: e.taskStatus in cls.TERMINAL_STATES)
+
+  #checking timewindow size is enough.
+  tailtohead =  abs(eventlist[0].timestamp - eventlist[-1].timestamp).seconds
+  print "tailtohead",tailtohead
+  if not tailtohead > lastxseconds * 0.8:
+    return None
+
+  rate = len(filter(lambda e: e.taskStatus in AppStatusRecorder.TERMINAL_STATES ,eventlist))
+
+  print "RATE",rate
+
+  indications = sorted(timeWindow['indication'].keys(),reverse=True)
+  if rate < indications[-1]:  # minimum rate to address
+    print "not enough failure to alert"
+    return None
+
+  for i in indications:
+    if rate >= i:
+       fillups['alertcolor'] = timeWindow['indication'][i][0]
+       fillups['alertlevel'] = timeWindow['indication'][i][1]
+       break
+
   fillups['ctime'] =  dt.utcnow().strftime('%c') + ' UTC'
+
   table_body = ""
   for ev in eventlist:
+        rowstyle = 'style="background-color:INDIANRED"'   if ev.taskStatus in AppStatusRecorder.TERMINAL_STATES else ''
         table_body += """
-                <tr>
+                <tr {rowstyle}>
                   <td style="padding-left:10px;padding-right:10px" align="center">{timestamp}</td>
                   <td style="padding-left:10px;padding-right:10px" align="center">{taskStatus}</td>
                   <td style="padding-left:10px;padding-right:10px" align="center">{host}</td>
@@ -40,64 +110,13 @@ def getbody(**kwargs):
                   <td style="padding-left:10px;padding-right:10px" align="center">{slaveId}</td>
                   <td style="padding-left:10px;padding-right:10px" align="center">{message}</td>
                 </tr>
-                """.format(timestamp=str(ev.timestamp),taskStatus=ev.taskStatus, host=ev.host,
+                """.format(rowstyle=rowstyle,
+                          timestamp=str(ev.timestamp),taskStatus=ev.taskStatus, host=ev.host,
                           ports=str(ev.ports), version=ev.version, slaveId=ev.slaveId,message=str(ev.message)
                     )
+
   fillups['appid'] = appid
-  fillups['marathonhost'] = marathonhost
-  fillups['alertcolor']="red"
-  fillups['alertlevel']="CRITICAL"
+
   fillups['table_body'] = table_body
+
   return body.format(**fillups)
-
-
-
-body = """ 
-<br><br>
-Hi team,
-<br>
-<b>Application "{appid}" have been failed at `{ctime}` on marathon@{marathonhost}</b>
-<br><br>
-<div>
-  <table>
-   <tbody>
-
-      <tr bgcolor="yellow">
-        <td align="left"><b>{ctime}</b></td>
-        <td align="right"><b>{appid}</b></td>
-      </tr>
-
-      <tr>
-        <td colspan="2"align="center"bgcolor="{alertcolor}"><b>{alertlevel}</b></td>
-      </tr>
-
-      <tr>
-        <td colspan="2"align="center">Failure History<br>
-          <table border="1" style= "border-collapse:collapse">
-            <tbody>
-              <tr>
-                <th style="padding-left:10px;padding-right:10px"><u>timestamp</u></th>
-                <th style="padding-left:10px;padding-right:10px"><u>taskStatus</u></th>
-                <th style="padding-left:10px;padding-right:10px"><u>host</u></th>
-                <th style="padding-left:10px;padding-right:10px"><u>ports</u></th>
-                <th style="padding-left:10px;padding-right:10px"><u>version</u></th>
-                <th style="padding-left:10px;padding-right:10px"><u>slaveid</u></th>
-                <th style="padding-left:10px;padding-right:10px"><u>message</u></th>
-              </tr>
-              {table_body}
-            </tbody>
-          </table>
-        </td>
-      </tr>
-
-   </tbody>
-  </table>
-</div>
-
-</div><br></div>
-"""
-
-
-if __name__ == '__main__':
-  print getsubject("/testapp")
-  print getbody("/testapp",[])

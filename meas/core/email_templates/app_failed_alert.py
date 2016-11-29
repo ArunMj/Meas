@@ -10,7 +10,7 @@ body = """
               <br/> Hi team,
               <br>
               <p style="color: IndianRed;font-size: 13px;">
-              Application <b>"{appid}"</b> have been <b>LOST</b> at `{ctime}` on host <b> {host} </b>
+              Application <b>"{appid}"</b> have been <b>FAILED</b> at `{ctime}` on host <b> {host} </b>
               </p>
               <br>
               <table style=>
@@ -36,7 +36,7 @@ def getsubject(ev):
   """ param: event"""
   appid = ev.appId
   return (
-          '_alert_{stime}:{appid}-LOST'
+          '_alert_{stime}:{appid}-FAILED'
               .format(stime=dt.utcnow().strftime('%Y-%m-%dT%H:%M:%S UTC'),appid=appid)
           )
 
