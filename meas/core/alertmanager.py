@@ -63,6 +63,6 @@ def send_mail_alert(subj,body):
     if  ec.send('postbud220.trv.flytxt.com',25):
         log.info('mail alert sent successfully')
     else:
-        log.error('mail alert failed.')
+        log.warn('mail alert failed.')
 
     

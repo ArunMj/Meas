@@ -7,7 +7,6 @@ from collections import defaultdict
 from marathonevents import MarathonStatusUpdateEvent
 from datetime import datetime as dt,timedelta
 import alertmanager
-from email_templates import template
 from logger import log
 
 class AppStatusRecorder(object):
@@ -60,6 +59,7 @@ class AppStatusRecorder(object):
     def get_events_in_last_xseconds(cls,appid,lastxseconds=300,filter_predicate=None):
         
         now = dt.utcnow()
+        #print now
         from_time = now - timedelta(seconds=lastxseconds)
 
         eventlist = []
@@ -70,6 +70,7 @@ class AppStatusRecorder(object):
                 if filter_predicate and not filter_predicate(e): # applies filter if mensioned
                     continue  # this wont match for filter case; so skipp it
                 eventlist.append(e)
+        #print eventlist
         return eventlist
 
 

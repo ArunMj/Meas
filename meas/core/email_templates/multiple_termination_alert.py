@@ -73,7 +73,8 @@ def getbody(appid,AppStatusRecorder):
   lastxseconds = timeWindow['delta']
   eventlist = AppStatusRecorder.get_events_in_last_xseconds(appid,lastxseconds=lastxseconds)
   #                                   filter_predicate=lambda e: e.taskStatus in cls.TERMINAL_STATES)
-
+  if not eventlist:
+    return None
   #checking timewindow size is enough.
   tailtohead =  abs(eventlist[0].timestamp - eventlist[-1].timestamp).seconds
   print "tailtohead",tailtohead

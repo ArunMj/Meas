@@ -14,8 +14,10 @@ class EventHandler (BaseHTTPServer.BaseHTTPRequestHandler):
         content_length = int(self.headers['Content-Length'])
         data =  self.rfile.read(content_length)
         event = event_factory.process(data)
-
+        if event is None:
+            log.warn("invalid event data received")
         if  isinstance(event,MarathonStatusUpdateEvent):
+            log.info("STATUS : " + event.tojson())
             AppStatusRecorder.add_event(event)
 
         # elif:  add here other event flows
@@ -23,7 +25,7 @@ class EventHandler (BaseHTTPServer.BaseHTTPRequestHandler):
 
         else:
             # some events are unhandled.
-            log.debug('unaccounted event : ' + repr(event))
+            log.warn('unaccounted event : ' + repr(event))
 
 
         self.send_response(201)

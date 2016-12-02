@@ -24,6 +24,12 @@ class MarathonEventBase(object):
     def stringify(self):
         return str(self)
 
+    def tojson(self):
+        dic = {"eventType":self.event_type,"timestamp":str(self.timestamp)}
+        for attribute in self.KNOWN_ATTRIBUTES:
+             dic[attribute] =  str(getattr(self, attribute)) 
+        return json.dumps(dic)
+
     def __str__(self):
         tstring = "[{type} @ {time}]\n\t{attr}"
         attrstring = '\n\t'.join([attribute + " : " + str(getattr(self, attribute)) 
@@ -163,11 +169,4 @@ class EventFactory:
             else:
                 raise Exception('Unknown event_type: {}, data: {}'.format(event_type, event_json))
         except Exception as oops:
-            import sys
-            print event_json_str
-            log.error("Could not process event data",oops)
-            
-            print event_json
-            print event_type
-            print "%$%^$%^#%$#%$#%$$^%&*&^&$#%$$^&%^&*^*&^^$%^$^&%&*^*&"
-            log.error("Could not process event data",oops)
+            log.error("Could not process event data")

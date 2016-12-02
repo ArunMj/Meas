@@ -4,7 +4,7 @@ from core.measerver import MeasServer
 from core.logger import log
 from core.utils import getconfdir,pathjoin
 from core import alertmanager
-
+from core.logger import log
 __version__ = '0.1b'
 
 conf_dir = getconfdir()
@@ -29,4 +29,5 @@ if __name__ == '__main__':
         meas_server.run_for_ever()
 
     except Exception as oops:
-        print oops.__class__.__name__,oops
+        log.error("could not start meas server")
+        # print oops.__class__.__name__,oops
