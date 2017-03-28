@@ -1,6 +1,7 @@
 import traceback
 import sys
 import logging
+import os
 from logging.handlers import TimedRotatingFileHandler
 
 class LOG(object):
@@ -30,6 +31,15 @@ class LOG(object):
         sys.stderr.write(p + '\n')
         traceback.print_exc()
 
-log =  LOG('measlogger','measlog.log')
+log =  None
 
+def set_logger(filepath):
+    try:
+        global log
+        log =  LOG('measlogger',filepath)
+        print "logs will be saved in " + filepath
+    except Exception as oops:
+        print 'logger',oops,'deafult log file <meas.log> will be used'
+        log =  LOG('measlogger','meas.log')
+        
 __all__ = [log]

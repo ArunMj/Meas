@@ -56,7 +56,7 @@ class EmailCore(object):
                     "No mail-header details has set.")
         frm =self.mail['From']
         #print 'from',frm
-        s = smtplib.SMTP(host, port)
+        s = smtplib.SMTP(host, port,timeout=20)
         s.sendmail(
             frm,
             self.recipients_list,
@@ -76,10 +76,24 @@ class EmailCore(object):
 class MailAlert(EmailCore):
     pass
     
+
+
+
+
+
+
+
+
+
+
+
+    
 if __name__ == '__main__':
+    # TEST
+    #
     ec = EmailCore()
-    ec.set_mailheader(subject='test',toaddrlist='mjhack08@gmail.com',fromaddr='noreplay@marathon.alert')
-    ec.set_recipients(['mjhack08@gmail.com'])
+    ec.set_mailheader(subject='test',toaddrlist='mailtest_01@gmail.com',fromaddr='noreplay@marathon.alert')
+    ec.set_recipients(['mailtest_01@gmail.com'])
     ec.prepare_html_body("""
       <body style="color: #003366;font-size: 13px;margin-left: 15px;">
               <br/>

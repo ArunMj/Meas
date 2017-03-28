@@ -1,7 +1,7 @@
 from datetime import datetime as dt
 
 """
-  if an app lost in any host this alert is triggered.
+  if an app failed in any host this alert is triggered.
 """
 
 body = """
@@ -17,9 +17,9 @@ body = """
                 <tr><td>timestamp </td> <td>: {timestamp}</td></tr>
                 <tr><td>slaveId </td> <td>: {slaveId}</td></tr>
                 <tr><td>host </td> <td> : {host}</td> </tr>
-                <tr> <td>ports </td> <td> : {ports}</td> </tr>
-                <tr> <td>version </td>  <td> : {version}</td> </tr>
-                <tr> <td>message </td>  <td>: {message}</td>  </tr>
+                <!-- COMMENTED <tr> <td>ports </td> <td> : {ports}</td> </tr>  -->
+                <!-- COMMENTED <tr> <td>version </td>  <td> : {version}</td> </tr> -->
+                <!-- COMMENTED <tr> <td>message </td>  <td>: {message}</td>  </tr> -->
               <table>
 
           <p style="color: #003366;font-size: 13px;margin-left: 13px;">

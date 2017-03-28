@@ -1,9 +1,10 @@
 from datetime import datetime as dt
-
+# import json
 """
   if an app failes multipple times this alert is triggered.
 """
 
+# --------------------------------------------------------------
 timeWindow = {
             "delta" : 60,
             "indication" : { 3:["ORANGE","WARNING"],
@@ -11,8 +12,8 @@ timeWindow = {
                              8:["TOMATO","FATAL"]
                            }
              }
-
-
+# timeWindow = json.load(open('timewindow.conf'))
+# --------------------------------------------------------------
 body = """ 
             <br><br>
             Hi team,
@@ -40,10 +41,10 @@ body = """
                             <th style="padding-left:10px;padding-right:10px"><u>timestamp</u></th>
                             <th style="padding-left:10px;padding-right:10px"><u>taskStatus</u></th>
                             <th style="padding-left:10px;padding-right:10px"><u>host</u></th>
-                            <th style="padding-left:10px;padding-right:10px"><u>ports</u></th>
-                            <th style="padding-left:10px;padding-right:10px"><u>version</u></th>
-                            <th style="padding-left:10px;padding-right:10px"><u>slaveid</u></th>
-                            <th style="padding-left:10px;padding-right:10px"><u>message</u></th>
+                            <!-- COMMENTED <th style="padding-left:10px;padding-right:10px"><u>ports</u></th> -->
+                            <!-- COMMENTED <th style="padding-left:10px;padding-right:10px"><u>version</u></th> -->
+                            <!-- COMMENTED <th style="padding-left:10px;padding-right:10px"><u>slaveid</u></th> -->
+                            <!-- COMMENTED <th style="padding-left:10px;padding-right:10px"><u>message</u></th> --> 
                           </tr>
                           {table_body}
                         </tbody>
@@ -68,16 +69,19 @@ def getsubject(appid):
 
 
 def getbody(appid,AppStatusRecorder):
+
   fillups ={}
 
   lastxseconds = timeWindow['delta']
   eventlist = AppStatusRecorder.get_events_in_last_xseconds(appid,lastxseconds=lastxseconds)
   #                                   filter_predicate=lambda e: e.taskStatus in cls.TERMINAL_STATES)
   if not eventlist:
+    print 'empty evenets in last %d seconds' % lastxseconds
     return None
   #checking timewindow size is enough.
   tailtohead =  abs(eventlist[0].timestamp - eventlist[-1].timestamp).seconds
-  print "tailtohead",tailtohead
+  print 'timewindow = %d secs' % tailtohead
+  # print "tailtohead",tailtohead
   if not tailtohead > lastxseconds * 0.8:
     return None
 
@@ -106,10 +110,10 @@ def getbody(appid,AppStatusRecorder):
                   <td style="padding-left:10px;padding-right:10px" align="center">{timestamp}</td>
                   <td style="padding-left:10px;padding-right:10px" align="center">{taskStatus}</td>
                   <td style="padding-left:10px;padding-right:10px" align="center">{host}</td>
-                  <td style="padding-left:10px;padding-right:10px" align="center">{ports}</td>
-                  <td style="padding-left:10px;padding-right:10px" align="center">{version}</td>
-                  <td style="padding-left:10px;padding-right:10px" align="center">{slaveId}</td>
-                  <td style="padding-left:10px;padding-right:10px" align="center">{message}</td>
+                  <!-- COMMENTED <td style="padding-left:10px;padding-right:10px" align="center">{ports}</td> -->
+                  <!-- COMMENTED <td style="padding-left:10px;padding-right:10px" align="center">{version}</td> -->
+                  <!-- COMMENTED <td style="padding-left:10px;padding-right:10px" align="center">{slaveId}</td> --> 
+                  <!-- COMMENTED <td style="padding-left:10px;padding-right:10px" align="center">{message}</td> -->
                 </tr>
                 """.format(rowstyle=rowstyle,
                           timestamp=str(ev.timestamp),taskStatus=ev.taskStatus, host=ev.host,

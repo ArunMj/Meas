@@ -1,0 +1,17 @@
+{
+"email": {
+    "from": "from@somewhere.com",
+    "to":  ["toaddr01@gmail.com","toaddr01@gmail.com"],
+    "cc": ["ccaddr01@gmail.com"],
+    "bcc": [],
+
+    "subject_pefix": "testEnvironment"
+    },
+
+
+
+"smtp": {
+    "host": "postbud220.trv.flytxt.com",
+    "port": 25
+    }
+}

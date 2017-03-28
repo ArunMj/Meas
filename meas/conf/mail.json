@@ -1,10 +1,11 @@
 {
 "email": {
-    "from": "alert@marathon.test",
-    "to":  ["mjhack08@gmail.com","mjhack04@gmail.com"],
-    "cc": ["mjhack01@gmail.com"],
+    "from": "infra_env",
+    "to":  ["thomas.john@flytxt.com","arun.muraleedharan@flytxt.com"],
+    "cc": [],
     "bcc": [],
-    "subject_pefix": "testEnv"
+
+    "subject_pefix": "Infra env"
     },
 
 

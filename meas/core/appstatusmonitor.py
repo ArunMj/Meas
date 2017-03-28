@@ -14,7 +14,7 @@ class AppStatusRecorder(object):
     # appid:eventlist
     event_bucket = defaultdict(list)
     
-    TERMINAL_STATES = ('TASK_FAILED','TASK_KILLED','TASK_LOST')
+    TERMINAL_STATES = ('TASK_FAILED','TASK_KILLED','TASK_LOST','TASK_FINISHED')
 
     @classmethod
     def add_event(cls,event):
@@ -31,25 +31,6 @@ class AppStatusRecorder(object):
         alertmanager.alert_this_event(event)
         if event.taskStatus in cls.TERMINAL_STATES:
             alertmanager.alert_this_app(app_id)
-
-        # print "ALL", cls.get_events_in_last_xseconds(app_id,lastxseconds = 40)
-        # print "TERM", cls.get_events_in_last_xseconds(app_id,lastxseconds = 40,
-        #                             filter_predicate=lambda e: e.taskStatus in cls.TERMINAL_STATES)
-
-        
-    # @classmethod
-    # def alert_app_status(cls,appid):
-    #     if not cls.event_bucket.has_key(appid):
-    #         return
-    #     eventlist = cls.event_bucket[appid]
-    #     print "$$$$"
-    #     count = cls.get_rate_of_failure(eventlist)
-    #     print "RATE",count
-    #     if count > 4:
-    #         print "sends alert for ",appid
-    #         send_alert(appid,eventlist)
-    #         print "deletes eventlist of ",appid
-    #         del eventlist[:]
 
     @classmethod
     def delete_app_record(cls,appid):

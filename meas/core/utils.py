@@ -1,6 +1,7 @@
 from datetime import datetime as dt
 from os import path
 import sys
+import threading
 
 def conv_datestring(datestr):
     return dt.strptime(datestr,'%Y-%m-%dT%H:%M:%S.%fZ')
@@ -14,6 +15,12 @@ def getconfdir():
 def pathjoin(a,b):
     return path.join(a,b)
 
+
+def spawnthread(f):
+    def func(*args,**kwargs):
+            thr = threading.Thread(target=f, args=args, kwargs=kwargs)
+            thr.start()
+    return func
 
 
 

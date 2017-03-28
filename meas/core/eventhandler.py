@@ -31,7 +31,7 @@ class EventHandler (BaseHTTPServer.BaseHTTPRequestHandler):
         self.send_response(201)
         self.send_header('Content-type','application/json')
         self.end_headers()
-        self.wfile.write('{"notify": "success""}')
+        self.wfile.write('{"notify": "success"}')
         return
 
     def log_request(self, code='-', size='-'):

@@ -2,7 +2,7 @@ import json
 from mailalert import EmailCore
 import appstatusmonitor
 from logger import log
-
+from utils import spawnthread
 from email_templates import ( app_failed_alert,
                               app_lost_alert,
                               multiple_termination_alert
@@ -47,22 +47,27 @@ def alert_this_app(appid):
         send_mail_alert(subj,body)
         appstatusmonitor.AppStatusRecorder.delete_app_record(appid)
 
+@spawnthread
 def send_mail_alert(subj,body):
     
-    print 'preparing mail .....'
-    # with open('mail.html','w') as f:
-    #     f.write(body)
-    subj = subject_pefix + '_' + subj
-    ec = EmailCore()
-    ec.set_mailheader(subject=subj,toaddrlist= to_addrlist,fromaddr=from_addr,
-                                    cclist=cc_addrlist, bcclist=bcc_addrlist)
-    ec.set_recipients(to_addrlist)
-    ec.prepare_html_body(body)
 
-    log.info("sending mail......")
-    if  ec.send('postbud220.trv.flytxt.com',25):
-        log.info('mail alert sent successfully')
-    else:
-        log.warn('mail alert failed.')
+    log.info('preparing mail .....')
+    with open('_____mail.html','w') as f:
+        f.write(body)
+    try:
+        subj = subject_pefix + '_' + subj
+        ec = EmailCore()
+        ec.set_mailheader(subject=subj,toaddrlist= to_addrlist,fromaddr=from_addr,
+                                        cclist=cc_addrlist, bcclist=bcc_addrlist)
+        ec.set_recipients(to_addrlist)
+        ec.prepare_html_body(body)
 
+        log.info("sending mail to " + str(to_addrlist) + " via "+ smtp_host +":"+ str(smtp_port))
+        if  ec.send(smtp_host,smtp_port):
+            log.info('mail alert sent successfully')
+        else:
+            log.warn('mail alert failed.')
+    except Exception as oops:
+        log.error("Error occured during sending mail alert")
+        pass
     
