@@ -7,14 +7,14 @@ from collections import defaultdict
 from marathonevents import MarathonStatusUpdateEvent
 from datetime import datetime as dt,timedelta
 import alertmanager
+from alertmanager import TERMINAL_STATES
 from logger import log
 
 class AppStatusRecorder(object):
-    
+
     # appid:eventlist
     event_bucket = defaultdict(list)
-    
-    TERMINAL_STATES = ('TASK_FAILED','TASK_KILLED','TASK_LOST','TASK_FINISHED')
+    alerthistory = dict()
 
     @classmethod
     def add_event(cls,event):
@@ -22,23 +22,55 @@ class AppStatusRecorder(object):
         """
         Accepts MarathonStatusUpdateEvent and triggers alert, stores event histories
         """
-        log.debug("added to record : "+repr(event))
         app_id = event.appId
         event_time = event.timestamp
-
         cls.event_bucket[app_id].append(event)
+        log.debug("added to record : "+repr(event) +" - " + event.taskStatus)
 
-        alertmanager.alert_this_event(event)
-        if event.taskStatus in cls.TERMINAL_STATES:
-            alertmanager.alert_this_app(app_id)
+        if event.taskStatus in TERMINAL_STATES:
+            last_alert_time = cls.alerthistory.get(app_id, None)
+            eventlist = []
+            if not last_alert_time:
+                #first time terminal event happend for this appId
+                log.debug("toast to first failure!!")
+                eventlist = [event]
+            else:
+                idle_time = (dt.utcnow() - last_alert_time).total_seconds()
+                log.debug( "idle_time = "+ str(idle_time))
+                if idle_time < alertmanager.timewindow:
+                    # next alert is only after exeeding time window
+                    log.debug("which is less than " + str(alertmanager.timewindow))
+                    return
+
+                # gets all Failure in last idletime
+                failures = cls.get_events_in_last_xseconds(app_id,
+                    lastxseconds=idle_time,
+                    filter_predicate = lambda e: e.taskStatus in TERMINAL_STATES)
+                log.debug("failures " +str(failures))
+                if not failures:
+                    # no failures in last idle time
+                    return
+                elif len(failures) == 1:
+                    #single  failure after a long time
+                    eventlist = failures
+                elif len(failures) > 1:
+                    #multiple failures. so gets all history
+                    eventlist = cls.get_events_in_last_xseconds(app_id,
+                                    lastxseconds=idle_time)
+            if eventlist:
+                log.debug( "events to alert ### " +str(eventlist))
+                cls.reset_record(app_id)
+                alertmanager.alert_status(eventlist)
+
 
     @classmethod
-    def delete_app_record(cls,appid):
+    def reset_record(cls,appid):
         cls.event_bucket.pop(appid,None)
+        cls.alerthistory[appid] = dt.utcnow()
 
     @classmethod
     def get_events_in_last_xseconds(cls,appid,lastxseconds=300,filter_predicate=None):
-        
+
         now = dt.utcnow()
         #print now
         from_time = now - timedelta(seconds=lastxseconds)
@@ -53,7 +85,3 @@ class AppStatusRecorder(object):
                 eventlist.append(e)
         #print eventlist
         return eventlist
-
-
-        
-

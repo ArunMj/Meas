@@ -3,6 +3,7 @@ import sys
 import logging
 import os
 from logging.handlers import TimedRotatingFileHandler
+import threading
 
 class LOG(object):
     def __init__ (self, loggername, logfile):
@@ -20,7 +21,7 @@ class LOG(object):
 
     def debug(self,p,*args):
         self.logger.debug(p)
-        sys.stdout.write(p + '\n')
+        sys.stdout.write( "****["+threading.current_thread().getName()+"] ---- "+p + '\n')
 
     def warn(self,p,*args):
         self.logger.warn(p)
@@ -41,5 +42,5 @@ def set_logger(filepath):
     except Exception as oops:
         print 'logger',oops,'deafult log file <meas.log> will be used'
         log =  LOG('measlogger','meas.log')
-        
+
 __all__ = [log]

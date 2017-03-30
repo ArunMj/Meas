@@ -1,14 +1,14 @@
 {
+
+"envname": "Infra env",
+"timewindow" : 30,
+
 "email": {
     "from": "infra_env",
-    "to":  ["thomas.john@flytxt.com","arun.muraleedharan@flytxt.com"],
+    "to":  ["arun.muraleedharan@flytxt.com"],
     "cc": [],
-    "bcc": [],
-
-    "subject_pefix": "Infra env"
+    "bcc": []
     },
-
-
 
 "smtp": {
     "host": "postbud220.trv.flytxt.com",

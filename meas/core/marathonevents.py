@@ -11,12 +11,12 @@ class MarathonEventBase(object):
 
     def __init__(self, eventType, timestamp, **kwargs):
         """
-            accepts json event representation, 
+            accepts json event representation,
             `eventType` and `timestamp` are always present keys
         """
         self.event_type = eventType  # All events have these two attributes
         self.timestamp = conv_datestring(timestamp)
-        
+
         for attribute_name in self.KNOWN_ATTRIBUTES:
             attribute = kwargs.get(attribute_name,None)
             setattr(self, attribute_name, attribute)
@@ -27,22 +27,22 @@ class MarathonEventBase(object):
     def tojson(self):
         dic = {"eventType":self.event_type,"timestamp":str(self.timestamp)}
         for attribute in self.KNOWN_ATTRIBUTES:
-             dic[attribute] =  str(getattr(self, attribute)) 
+             dic[attribute] =  str(getattr(self, attribute))
         return json.dumps(dic)
 
     def __str__(self):
         tstring = "[{type} @ {time}]\n\t{attr}"
-        attrstring = '\n\t'.join([attribute + " : " + str(getattr(self, attribute)) 
+        attrstring = '\n\t'.join([attribute + " : " + str(getattr(self, attribute))
                                     for attribute in self.KNOWN_ATTRIBUTES]
                      )
         return tstring.format(type=self.event_type.upper(),
                               time=(str(self.timestamp) + ' UTC'),
                               attr=attrstring)
-    
+
     def __repr__(self):
         return "<%s@%s>" % (self.event_type,self.timestamp)
-    
-    
+
+
 
 class MarathonApiPostEvent(MarathonEventBase):
     KNOWN_ATTRIBUTES = ['clientIp', 'appDefinition', 'uri']

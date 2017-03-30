@@ -1,61 +1,129 @@
 import json
 from mailalert import EmailCore
-import appstatusmonitor
 from logger import log
 from utils import spawnthread
-from email_templates import ( app_failed_alert,
-                              app_lost_alert,
-                              multiple_termination_alert
-                            )
+
+import os
+import sys
+import jinja2
+
+template_loc = os.path.join(os.path.dirname(__file__),"email_templates")
+
+def render(template, context):
+    return jinja2.Environment(
+        loader=jinja2.FileSystemLoader(template_loc)
+        ).get_template(template).render(context)
+
+
 from_addr = ""
 to_addrlist = []
 cc_addrlist = []
 bcc_addrlist = []
-subject_pefix = ""
-
+envname = "unknown-environment"
 smtp_host = ""
 smtp_port = None
 
-def parse_mail_conf(path):
-    conf = json.load(open(path))
-    global from_addr,to_addrlist,cc_addrlist,bcc_addrlist,subject_pefix,smtp_host,smtp_port
-    from_addr = conf['email']['from']
-    to_addrlist = conf['email']['to']
-    cc_addrlist = conf['email']['cc']
-    bcc_addrlist = conf['email']['bcc']
-    subject_pefix = conf['email']['subject_pefix']
+timewindow = 5 * 60 # seconds
 
-    smtp_host = conf['smtp']['host']
-    smtp_port = conf['smtp']['port']
+TERMINAL_STATES = ('TASK_FAILED','TASK_KILLED','TASK_LOST','TASK_FINISHED')
+
+def parse_conf(path):
+    try:
+        conf = json.load(open(path))
+        global from_addr, to_addrlist, cc_addrlist, bcc_addrlist, smtp_host, smtp_port
+        global timewindow, envname
+        from_addr = conf['email']['from']
+        to_addrlist = conf['email']['to']
+        cc_addrlist = conf['email']['cc']
+        bcc_addrlist = conf['email']['bcc']
+        timewindow = int(conf['timewindow'])
+        envname = conf['envname']
+
+        smtp_host = conf['smtp']['host']
+        smtp_port = conf['smtp']['port']
+    except Exception as e:
+        log.error("Parsing configuration failed.")
+        sys.exit(-2)
 
 
 def alert_this_event(e):
+    """
+    event e =
+    {
+      "eventType": "status_update_event",
+      "timestamp": "2014-03-01T23:29:30.158Z",
+      "slaveId": "20140909-054127-177048842-5050-1494-0",
+      "taskId": "my-app_0-1396592784349",
+      "taskStatus": "TASK_RUNNING",
+      "appId": "/my-app",
+      "host": "slave-1234.acme.org",
+      "ports": [31372],
+      "version": "2014-04-04T06:26:23.051Z",
+      "message": ""
+    }
+
+    subject example:   Failed: /infra/env/mysql (test_env)
+    """
+    subj_template = "{subjstatus}: {appid} ({envname})"
+    # ctime =  dt.utcnow().strftime('%c') + ' UTC'
+
     if e.taskStatus == 'TASK_LOST':
-        body = app_lost_alert.getbody(e)
-        subj = app_lost_alert.getsubject(e)
-        send_mail_alert(subj,body)
-
+        title = 'Application was lost'
+        subjstatus = 'Lost'
     elif e.taskStatus == 'TASK_FAILED':
-        body = app_failed_alert.getbody(e)
-        subj = app_failed_alert.getsubject(e)
-        send_mail_alert(subj,body)
+        title = 'Application was failed'
+        subjstatus = 'Failed'
+    elif e.taskStatus == 'TASK_KILLED':
+        title = 'Application was killed'
+        subjstatus = 'Killed'
+    else:
+        subjstatus = e.taskStatus
+        title = e.taskStatus
 
-def alert_this_app(appid):
-    body = multiple_termination_alert.getbody(appid,appstatusmonitor.AppStatusRecorder)
-    subj = multiple_termination_alert.getsubject(appid)
-    if body is not None:
-        send_mail_alert(subj,body)
-        appstatusmonitor.AppStatusRecorder.delete_app_record(appid)
+    subj = subj_template.format( subjstatus=subjstatus, appid=e.appId,
+                                envname=envname )
+    jinjacontext = {
+    	'marathonurl' : "http://localhost:8080",
+    	'appid' : e.appId,
+        'message' : e.message,
+    	"title" : title,
+    	"timestamp": (e.timestamp).strftime('%d %b %Y %H:%M:%S UTC'),
+    	"appname" : e.appId.split('/')[-1],
+    	"node" : e.host
+    	}
+
+    #if e.taskStatus in ['TASK_LOST', 'TASK_FAILED']:
+    body = render('redalert.html', jinjacontext)
+    send_mail_alert(subj,body)
+
+def alert_multiple(eventlist):
+    subj_template = "still failing : {appid} ({envname})"
+    appid = eventlist[0].appId
+    subj = subj_template.format(appid=appid, envname=envname)
+    jinjacontext = {
+    	'marathonurl' : "http://localhost:8080",
+	    'title' : "Appication have been failed multiple times",
+    	'appid': appid,
+    	'eventlist' : eventlist,
+    	'TERMINAL_STATES': TERMINAL_STATES
+    	}
+
+    #if e.taskStatus in ['TASK_LOST', 'TASK_FAILED']:
+    body = render('multiple.html', jinjacontext)
+    send_mail_alert(subj,body)
+
+def alert_status(eventlist):
+    if len(eventlist) == 1:
+        alert_this_event(eventlist[0])
+    else:
+        alert_multiple(eventlist)
 
 @spawnthread
 def send_mail_alert(subj,body):
-    
-
     log.info('preparing mail .....')
-    with open('_____mail.html','w') as f:
-        f.write(body)
+    # with open('_mail.html','w') as f:
+    #     f.write(body)
     try:
-        subj = subject_pefix + '_' + subj
         ec = EmailCore()
         ec.set_mailheader(subject=subj,toaddrlist= to_addrlist,fromaddr=from_addr,
                                         cclist=cc_addrlist, bcclist=bcc_addrlist)
@@ -70,4 +138,3 @@ def send_mail_alert(subj,body):
     except Exception as oops:
         log.error("Error occured during sending mail alert")
         pass
-    
