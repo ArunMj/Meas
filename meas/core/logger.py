@@ -8,9 +8,9 @@ import threading
 class LOG(object):
     def __init__ (self, loggername, logfile):
         self.logger = logging.getLogger(loggername)
-        self.logger.setLevel(logging.DEBUG)
+        self.logger.setLevel(logging.INFO)
         fileLogHandler = TimedRotatingFileHandler(logfile, 'midnight', 1, 31)
-        fileLogHandler.setLevel(logging.DEBUG)
+        fileLogHandler.setLevel(logging.INFO)
         logOutputFormat = logging.Formatter("%(asctime)-10s %(name)-10s %(levelname)-5s %(message)-30s")
         fileLogHandler.setFormatter(logOutputFormat)
         self.logger.addHandler(fileLogHandler)

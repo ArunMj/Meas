@@ -19,7 +19,7 @@ class EventHandler (BaseHTTPServer.BaseHTTPRequestHandler):
             log.warn("invalid event data received")
 
         if  isinstance(event,MarathonStatusUpdateEvent):
-            #log.info("STATUS : " + event.tojson())
+            log.info("STATUS:" + event.tojson())
             AppStatusRecorder.add_event(event)
 
 

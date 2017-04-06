@@ -1,13 +1,16 @@
+import os
+import sys
 import json
+import socket
+import jinja2
+
 from mailalert import EmailCore
 from logger import log
 from utils import spawnthread
 
-import os
-import sys
-import jinja2
-
-template_loc = os.path.join(os.path.dirname(__file__),"email_templates")
+template_loc = os.path.join(
+                os.path.dirname(os.path.dirname(__file__)), "email_templates")
+hostname = socket.gethostname()
 
 def render(template, context):
     return jinja2.Environment(
@@ -83,7 +86,7 @@ def alert_this_event(e):
     subj = subj_template.format( subjstatus=subjstatus, appid=e.appId,
                                 envname=envname )
     jinjacontext = {
-    	'marathonurl' : "http://localhost:8080",
+    	'marathonurl' : "http://%s:8080/ui/#/apps%s" % (hostname,e.appId),
     	'appid' : e.appId,
         'message' : e.message,
     	"title" : title,
@@ -101,7 +104,7 @@ def alert_multiple(eventlist):
     appid = eventlist[0].appId
     subj = subj_template.format(appid=appid, envname=envname)
     jinjacontext = {
-    	'marathonurl' : "http://localhost:8080",
+    	'marathonurl' : "http://%s:8080/ui/#/apps%s" % (hostname,appid),
 	    'title' : "Appication have been failed multiple times",
     	'appid': appid,
     	'eventlist' : eventlist,
