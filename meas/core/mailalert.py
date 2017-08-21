@@ -12,6 +12,7 @@ from email.mime.text import MIMEText
 class MailException(Exception):
     pass
 
+
 class EmailCore(object):
 
     def __init__(self):
@@ -28,23 +29,23 @@ class EmailCore(object):
         self.mail['BCC'] = ','.join(self._makelist(bcclist))
         self.mail.preamble = 'You will not see this in a MIME-aware mail reader.\n'
         self._isheaderOK = True
-        #print self. mail
+        # print self. mail
 
     def set_recipients(self, recipients_list):
         if len(recipients_list) == 0:
             raise MailException(
-                    "recipients_list should not be empty.")
+                "recipients_list should not be empty.")
         self.recipients_list = recipients_list
 
     def prepare_text_body(self, text):
         _text_mime = MIMEText(text, 'plain')
         if self.mail:
-			self.mail.attach(_text_mime)
+            self.mail.attach(_text_mime)
 
     def prepare_html_body(self, html_template):
         _html_mime = MIMEText(html_template, 'html')
         if self.mail:
-			self.mail.attach(_html_mime)
+            self.mail.attach(_html_mime)
 
     def send(self, host, port, priorty=None):
         if not self.recipients_list:
@@ -53,25 +54,24 @@ class EmailCore(object):
 
         if not self._isheaderOK:
             raise Exception(
-                    "No mail-header details has set.")
-        frm =self.mail['From']
-        #print 'from',frm 
+                "No mail-header details has set.")
+        frm = self.mail['From']
+        # print 'from',frm
         s = smtplib.SMTP(host, port)
         resp = s.sendmail(
             frm,
             self.recipients_list,
             self.mail.as_string()
-            )
+        )
         s.quit()
-        
+
         # resp is {} if all recipients are accepted.
         # This method will return normally if the mail is accepted for at least
         # one recipient.  It returns a dictionary, with one entry for each
         # recipient that was refused.
         return resp
 
-
-    def _makelist(self,addr):
+    def _makelist(self, addr):
         if isinstance(addr, str):
             return (addr,)
         else:
@@ -82,16 +82,14 @@ class MailAlert(EmailCore):
     pass
 
 
-
-
 if __name__ == '__main__':
     # TEST
     #
     ec = EmailCore()
-    ec.set_mailheader(subject='test',toaddrlist='arun.muraleedharan@flytxt.com',fromaddr='noreplay@marathon.alert')
-    ec.set_recipients(['arun.muraleedharan@flytxt.com','wsexyvkm@sharklasers.com','arunmj123@yahoo.com'])
+    ec.set_mailheader(subject='test', toaddrlist='arun.muraleedharan@flytxt.com', fromaddr='noreplay@marathon.alert')
+    ec.set_recipients(['arun.muraleedharan@flytxt.com', 'wsexyvkm@sharklasers.com', 'arunmj123@yahoo.com'])
     with open('core/_mail.html') as f:
         body = f.read()
     ec.prepare_html_body(body)
-    print ec.send('postbud220.trv.flytxt.com',25)
+    print ec.send('postbud220.trv.flytxt.com', 25)
     print "ok"

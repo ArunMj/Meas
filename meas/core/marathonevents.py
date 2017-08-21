@@ -3,6 +3,7 @@ from logger import log
 
 from utils import conv_datestring
 
+
 class MarathonEventBase(object):
     """
     """
@@ -18,30 +19,29 @@ class MarathonEventBase(object):
         self.timestamp = conv_datestring(timestamp)
 
         for attribute_name in self.KNOWN_ATTRIBUTES:
-            attribute = kwargs.get(attribute_name,None)
+            attribute = kwargs.get(attribute_name, None)
             setattr(self, attribute_name, attribute)
 
     def stringify(self):
         return str(self)
 
     def tojson(self):
-        dic = {"eventType":self.event_type,"timestamp":str(self.timestamp)}
+        dic = {"eventType": self.event_type, "timestamp": str(self.timestamp)}
         for attribute in self.KNOWN_ATTRIBUTES:
-             dic[attribute] =  str(getattr(self, attribute))
+            dic[attribute] = str(getattr(self, attribute))
         return json.dumps(dic)
 
     def __str__(self):
         tstring = "[{type} @ {time}]\n\t{attr}"
         attrstring = '\n\t'.join([attribute + " : " + str(getattr(self, attribute))
-                                    for attribute in self.KNOWN_ATTRIBUTES]
-                     )
+                                  for attribute in self.KNOWN_ATTRIBUTES]
+                                 )
         return tstring.format(type=self.event_type.upper(),
                               time=(str(self.timestamp) + ' UTC'),
                               attr=attrstring)
 
     def __repr__(self):
-        return "<%s@%s>" % (self.event_type,self.timestamp)
-
+        return "<%s@%s>" % (self.event_type, self.timestamp)
 
 
 class MarathonApiPostEvent(MarathonEventBase):
@@ -120,11 +120,13 @@ class MarathonEventStreamDetached(MarathonEventBase):
 class MarathonUnhealthyTaskKillEvent(MarathonEventBase):
     KNOWN_ATTRIBUTES = ['appId', 'taskId', 'version', 'reason']
 
+
 class MarathonAppTerminatedEvent(MarathonEventBase):
     KNOWN_ATTRIBUTES = ['appId']
 
+
 class MarathonSchedulerRegisteredEvent(MarathonEventBase):
-    KNOWN_ATTRIBUTES = ['master','frameworkId']
+    KNOWN_ATTRIBUTES = ['master', 'frameworkId']
 
 
 class EventFactory:
@@ -155,7 +157,7 @@ class EventFactory:
         'event_stream_attached': MarathonEventStreamAttached,
         'event_stream_detached': MarathonEventStreamDetached,
 
-        'scheduler_registered_event':MarathonSchedulerRegisteredEvent,
+        'scheduler_registered_event': MarathonSchedulerRegisteredEvent,
         'app_terminated_event': MarathonAppTerminatedEvent
     }
 

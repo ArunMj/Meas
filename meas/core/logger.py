@@ -5,8 +5,9 @@ import os
 from logging.handlers import TimedRotatingFileHandler
 import threading
 
+
 class LOG(object):
-    def __init__ (self, loggername, logfile):
+    def __init__(self, loggername, logfile):
         self.logger = logging.getLogger(loggername)
         self.logger.setLevel(logging.INFO)
         fileLogHandler = TimedRotatingFileHandler(logfile, 'midnight', 1, 31)
@@ -15,32 +16,35 @@ class LOG(object):
         fileLogHandler.setFormatter(logOutputFormat)
         self.logger.addHandler(fileLogHandler)
 
-    def info(self,p,*args):
+    def info(self, p, *args):
         self.logger.info(p)
         sys.stdout.write(p + '\n')
 
-    def debug(self,p,*args):
+    def debug(self, p, *args):
         self.logger.debug(p)
-        sys.stdout.write( "****["+threading.current_thread().getName()+"] ---- "+p + '\n')
+        sys.stdout.write("****[" + threading.current_thread().getName() + "] ---- " + p + '\n')
 
-    def warn(self,p,*args):
+    def warn(self, p, *args):
         self.logger.warn(p)
         sys.stdout.write(p + '\n')
 
-    def error(self,p,*args):
+    def error(self, p, *args):
         self.logger.exception(p)
         sys.stderr.write(p + '\n')
         traceback.print_exc()
 
-log =  None
+
+log = None
+
 
 def set_logger(filepath):
     try:
         global log
-        log =  LOG('measlogger',filepath)
+        log = LOG('measlogger', filepath)
         print "logs will be saved in " + filepath
     except Exception as oops:
-        print 'logger',oops,'deafult log file <meas.log> will be used'
-        log =  LOG('measlogger','meas.log')
+        print 'logger', oops, 'deafult log file <meas.log> will be used'
+        log = LOG('measlogger', 'meas.log')
+
 
 __all__ = [log]

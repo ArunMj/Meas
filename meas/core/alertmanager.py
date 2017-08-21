@@ -10,13 +10,14 @@ from logger import log
 from utils import spawnthread
 
 template_loc = os.path.join(
-                os.path.dirname(os.path.dirname(__file__)), "email_templates")
+    os.path.dirname(os.path.dirname(__file__)), "email_templates")
 hostname = socket.getfqdn()
+
 
 def render(template, context):
     return jinja2.Environment(
         loader=jinja2.FileSystemLoader(template_loc)
-        ).get_template(template).render(context)
+    ).get_template(template).render(context)
 
 
 from_addr = ""
@@ -27,9 +28,10 @@ envname = "unknown-environment"
 smtp_host = ""
 smtp_port = None
 
-timewindow = 5 * 60 # seconds
-MAIL_RETRY_INTERVAL = 10 # seconds
-TERMINAL_STATES = ('TASK_FAILED','TASK_KILLED','TASK_LOST','TASK_FINISHED')
+timewindow = 5 * 60  # seconds
+MAIL_RETRY_INTERVAL = 10  # seconds
+TERMINAL_STATES = ('TASK_FAILED', 'TASK_KILLED', 'TASK_LOST', 'TASK_FINISHED')
+
 
 def parse_conf(path):
     try:
@@ -84,37 +86,39 @@ def alert_this_event(e):
         subjstatus = e.taskStatus
         title = e.taskStatus
 
-    subj = subj_template.format( subjstatus=subjstatus, appid=e.appId,
-                                envname=envname )
+    subj = subj_template.format(subjstatus=subjstatus, appid=e.appId,
+                                envname=envname)
     jinjacontext = {
-    	'marathonurl' : "http://%s:8080/ui/#/apps%s" % (hostname,e.appId),
-    	'appid' : e.appId,
-        'message' : e.message,
-    	"title" : title,
-    	"timestamp": (e.timestamp).strftime('%d %b %Y %H:%M:%S UTC'),
-    	"appname" : e.appId.split('/')[-1],
-    	"node" : e.host
-    	}
+        'marathonurl': "http://%s:8080/ui/#/apps%s" % (hostname, e.appId),
+        'appid': e.appId,
+        'message': e.message,
+        "title": title,
+        "timestamp": (e.timestamp).strftime('%d %b %Y %H:%M:%S UTC'),
+        "appname": e.appId.split('/')[-1],
+        "node": e.host
+    }
 
-    #if e.taskStatus in ['TASK_LOST', 'TASK_FAILED']:
+    # if e.taskStatus in ['TASK_LOST', 'TASK_FAILED']:
     body = render('redalert.html', jinjacontext)
-    send_mail_alert(subj,body)
+    send_mail_alert(subj, body)
+
 
 def alert_multiple(eventlist):
     subj_template = "still failing : {appid} ({envname})"
     appid = eventlist[0].appId
     subj = subj_template.format(appid=appid, envname=envname)
     jinjacontext = {
-    	'marathonurl' : "http://%s:8080/ui/#/apps%s" % (hostname,appid),
-	    'title' : "Appication have been failed multiple times",
-    	'appid': appid,
-    	'eventlist' : eventlist,
-    	'TERMINAL_STATES': TERMINAL_STATES
-    	}
+        'marathonurl': "http://%s:8080/ui/#/apps%s" % (hostname, appid),
+        'title': "Appication have been failed multiple times",
+        'appid': appid,
+        'eventlist': eventlist,
+        'TERMINAL_STATES': TERMINAL_STATES
+    }
 
-    #if e.taskStatus in ['TASK_LOST', 'TASK_FAILED']:
+    # if e.taskStatus in ['TASK_LOST', 'TASK_FAILED']:
     body = render('multiple.html', jinjacontext)
-    send_mail_alert(subj,body)
+    send_mail_alert(subj, body)
+
 
 def alert_status(eventlist):
     if len(eventlist) == 1:
@@ -122,8 +126,9 @@ def alert_status(eventlist):
     else:
         alert_multiple(eventlist)
 
+
 @spawnthread
-def send_mail_alert(subj,body):
+def send_mail_alert(subj, body):
     log.info('preparing mail .....')
     # with open('_mail.html','w') as f:
     #     f.write(body)
@@ -131,19 +136,19 @@ def send_mail_alert(subj,body):
         trial_count = 0
 
         ec = EmailCore()
-        ec.set_mailheader(subject=subj,toaddrlist= to_addrlist,fromaddr=from_addr,
-                                        cclist=cc_addrlist, bcclist=bcc_addrlist)
+        ec.set_mailheader(subject=subj, toaddrlist=to_addrlist, fromaddr=from_addr,
+                          cclist=cc_addrlist, bcclist=bcc_addrlist)
         ec.set_recipients(to_addrlist)
         ec.prepare_html_body(body)
 
-        log.info("sending mail to " + str(to_addrlist) + " via "+ smtp_host +":"+ str(smtp_port))
+        log.info("sending mail to " + str(to_addrlist) + " via " + smtp_host + ":" + str(smtp_port))
 
         while trial_count < 10:
             try:
                 trial_count += 1
-                resp = ec.send(smtp_host,smtp_port)
+                resp = ec.send(smtp_host, smtp_port)
                 log.info('mail alert submitted successfully (total tries = %s , failed recipients: %s) '
-                             %(trial_count,resp))
+                         % (trial_count, resp))
                 return
             except Exception as oops:
                 time.sleep(MAIL_RETRY_INTERVAL)
@@ -152,4 +157,3 @@ def send_mail_alert(subj,body):
     except Exception as oops:
         log.error("Error occured during sending mail alert (total tries = %s)" % trial_count)
         pass
-
