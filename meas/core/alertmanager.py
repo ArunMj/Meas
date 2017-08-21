@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import socket
+import time
 import jinja2
 
 from mailalert import EmailCore
@@ -27,7 +28,7 @@ smtp_host = ""
 smtp_port = None
 
 timewindow = 5 * 60 # seconds
-
+MAIL_RETRY_INTERVAL = 10 # seconds
 TERMINAL_STATES = ('TASK_FAILED','TASK_KILLED','TASK_LOST','TASK_FINISHED')
 
 def parse_conf(path):
@@ -127,6 +128,8 @@ def send_mail_alert(subj,body):
     # with open('_mail.html','w') as f:
     #     f.write(body)
     try:
+        trial_count = 0
+
         ec = EmailCore()
         ec.set_mailheader(subject=subj,toaddrlist= to_addrlist,fromaddr=from_addr,
                                         cclist=cc_addrlist, bcclist=bcc_addrlist)
@@ -134,10 +137,19 @@ def send_mail_alert(subj,body):
         ec.prepare_html_body(body)
 
         log.info("sending mail to " + str(to_addrlist) + " via "+ smtp_host +":"+ str(smtp_port))
-        if  ec.send(smtp_host,smtp_port):
-            log.info('mail alert sent successfully')
-        else:
-            log.warn('mail alert failed.')
+
+        while trial_count < 10:
+            try:
+                trial_count += 1
+                resp = ec.send(smtp_host,smtp_port)
+                log.info('mail alert submitted successfully (total tries = %s , failed recipients: %s) '
+                             %(trial_count,resp))
+                return
+            except Exception as oops:
+                time.sleep(MAIL_RETRY_INTERVAL)
+        # if here, mail was failed to submit after MAIL_RETRY_INTERVAL. reraise exception
+        raise
     except Exception as oops:
-        log.error("Error occured during sending mail alert")
+        log.error("Error occured during sending mail alert (total tries = %s)" % trial_count)
         pass
+

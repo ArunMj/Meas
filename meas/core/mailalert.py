@@ -55,15 +55,20 @@ class EmailCore(object):
             raise Exception(
                     "No mail-header details has set.")
         frm =self.mail['From']
-        #print 'from',frm
+        #print 'from',frm 
         s = smtplib.SMTP(host, port)
-        s.sendmail(
+        resp = s.sendmail(
             frm,
             self.recipients_list,
             self.mail.as_string()
             )
         s.quit()
-        return True
+        
+        # resp is {} if all recipients are accepted.
+        # This method will return normally if the mail is accepted for at least
+        # one recipient.  It returns a dictionary, with one entry for each
+        # recipient that was refused.
+        return resp
 
 
     def _makelist(self,addr):
