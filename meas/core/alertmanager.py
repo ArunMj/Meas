@@ -100,10 +100,17 @@ def alert_this_event(e):
         "title": title,
         "timestamp": (e.timestamp).strftime('%d %b %Y %H:%M:%S UTC'),
         "appname": e.appId.split('/')[-1],
+        "taskid" : e.taskId,
         "node": e.host
     }
 
     # if e.taskStatus in ['TASK_LOST', 'TASK_FAILED']:
+
+    try:
+        app_host = e.host
+        
+    except Exception as oops:
+            log.execption("Error while attaching logs.")    
     body = render('redalert.html', jinjacontext)
     send_mail_alert(subj, body)
 
