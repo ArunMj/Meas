@@ -47,7 +47,7 @@ class EmailCore(object):
         if self.mail:
             self.mail.attach(_html_mime)
 
-    def send(self, host, port, priorty=None):
+    def send(self, host, port, user=None, password=None, auth=None):
         if not self.recipients_list:
             raise MailException(
                 "No recipients details has set.")
@@ -57,13 +57,30 @@ class EmailCore(object):
                 "No mail-header details has set.")
         frm = self.mail['From']
         # print 'from',frm
-        s = smtplib.SMTP(host, port)
-        resp = s.sendmail(
+
+        if auth == 'tls':
+            server = smtplib.SMTP(host, port)
+            server.ehlo()
+            server.starttls()
+        elif auth == 'ssl':
+            server = smtplib.SMTP_SSL(host, port)
+            server.ehlo()
+        elif auth:
+            # TODO:
+            raise NotImplementedError
+        else:
+            server = smtplib.SMTP(host, port)
+            # print server.ehlo()
+
+        if user or password:
+            print server.login(user, password)
+
+        resp = server.sendmail(
             frm,
             self.recipients_list,
             self.mail.as_string()
         )
-        s.quit()
+        server.quit()
 
         # resp is {} if all recipients are accepted.
         # This method will return normally if the mail is accepted for at least

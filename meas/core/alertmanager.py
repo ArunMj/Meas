@@ -27,7 +27,7 @@ bcc_addrlist = []
 envname = "unknown-environment"
 smtp_host = ""
 smtp_port = None
-
+smtp_user, smtp_password, smtp_auth = None, None, None
 timewindow = 5 * 60  # seconds
 MAIL_RETRY_INTERVAL = 10  # seconds
 TERMINAL_STATES = ('TASK_FAILED', 'TASK_KILLED', 'TASK_LOST', 'TASK_FINISHED')
@@ -36,7 +36,7 @@ TERMINAL_STATES = ('TASK_FAILED', 'TASK_KILLED', 'TASK_LOST', 'TASK_FINISHED')
 def parse_conf(path):
     try:
         conf = json.load(open(path))
-        global from_addr, to_addrlist, cc_addrlist, bcc_addrlist, smtp_host, smtp_port
+        global from_addr, to_addrlist, cc_addrlist, bcc_addrlist, smtp_host, smtp_port, smtp_user, smtp_password, smtp_auth
         global timewindow, envname
         from_addr = conf['email']['from']
         to_addrlist = conf['email']['to']
@@ -47,6 +47,11 @@ def parse_conf(path):
 
         smtp_host = conf['smtp']['host']
         smtp_port = conf['smtp']['port']
+
+        smtp_user = conf['smtp'].get('user')
+        smtp_password = conf['smtp'].get('password')
+        smtp_auth = conf['smtp'].get('auth')
+
     except Exception as e:
         log.error("Parsing configuration failed.")
         sys.exit(-2)
@@ -146,7 +151,7 @@ def send_mail_alert(subj, body):
         while trial_count < 10:
             try:
                 trial_count += 1
-                resp = ec.send(smtp_host, smtp_port)
+                resp = ec.send(smtp_host, smtp_port, smtp_user, smtp_password, smtp_auth)
                 log.info('mail alert submitted successfully (total tries = %s , failed recipients: %s) '
                          % (trial_count, resp))
                 return

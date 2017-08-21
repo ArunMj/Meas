@@ -1,17 +1,20 @@
 {
 
-"envname": "Infra env",
-"timewindow" : 30,
+    "envname": "Infra env",
+    "timewindow": 30,
 
-"email": {
-    "from": "infra_env",
-    "to":  ["arun.muraleedharan@flytxt.com"],
-    "cc": [],
-    "bcc": []
+    "email": {
+        "from": "infra_env",
+        "to": ["arun.muraleedharan@flytxt.com"],
+        "cc": [],
+        "bcc": []
     },
 
-"smtp": {
-    "host": "postbud220.trv.flytxt.com",
-    "port": 25
+    "smtp": {
+        "host": "postbud220.trv.flytxt.com",
+        "port": 25,
+        "auth": null,
+        "user": null,
+        "password": null
     }
 }
