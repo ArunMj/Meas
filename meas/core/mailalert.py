@@ -56,7 +56,7 @@ class EmailCore(object):
                     "No mail-header details has set.")
         frm =self.mail['From']
         #print 'from',frm
-        s = smtplib.SMTP(host, port,timeout=20)
+        s = smtplib.SMTP(host, port)
         s.sendmail(
             frm,
             self.recipients_list,

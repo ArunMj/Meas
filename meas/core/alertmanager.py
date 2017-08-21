@@ -10,7 +10,7 @@ from utils import spawnthread
 
 template_loc = os.path.join(
                 os.path.dirname(os.path.dirname(__file__)), "email_templates")
-hostname = socket.gethostname()
+hostname = socket.getfqdn()
 
 def render(template, context):
     return jinja2.Environment(
