@@ -5,9 +5,10 @@ import socket
 import time
 import jinja2
 
-from mailalert import EmailCore
-from logger import log
-from utils import spawnthread
+from .mailalert import EmailCore
+from .logger import log
+from .utils import spawnthread
+from .log_fetcher import get_std_logs
 
 template_loc = os.path.join(
     os.path.dirname(os.path.dirname(__file__)), "email_templates")
@@ -75,23 +76,26 @@ def alert_this_event(e):
 
     subject example:   Failed: /infra/env/mysql (test_env)
     """
-    subj_template = "{subjstatus}: {appid} ({envname})"
+    subj_template = "[{envname}] marathon application {appid} - {status}:  "
     # ctime =  dt.utcnow().strftime('%c') + ' UTC'
 
     if e.taskStatus == 'TASK_LOST':
         title = 'Application was lost'
-        subjstatus = 'Lost'
+        status = 'Lost'
     elif e.taskStatus == 'TASK_FAILED':
-        title = 'Application was failed'
-        subjstatus = 'Failed'
+        title = 'Application has failed'
+        status = 'Failed'
     elif e.taskStatus == 'TASK_KILLED':
         title = 'Application was killed'
-        subjstatus = 'Killed'
+        status = 'Killed'
+    elif e.taskStatus == 'TASK_FINISHED':
+        title = 'Application has finished'
+        status = 'Finished'
     else:
-        subjstatus = e.taskStatus
+        status = e.taskStatus
         title = e.taskStatus
 
-    subj = subj_template.format(subjstatus=subjstatus, appid=e.appId,
+    subj = subj_template.format(status=status, appid=e.appId,
                                 envname=envname)
     jinjacontext = {
         'marathonurl': "http://%s:8080/ui/#/apps%s" % (hostname, e.appId),
@@ -100,23 +104,29 @@ def alert_this_event(e):
         "title": title,
         "timestamp": (e.timestamp).strftime('%d %b %Y %H:%M:%S UTC'),
         "appname": e.appId.split('/')[-1],
-        "taskid" : e.taskId,
+        "taskid": e.taskId,
         "node": e.host
     }
 
     # if e.taskStatus in ['TASK_LOST', 'TASK_FAILED']:
-
+    logfiles = []
     try:
         app_host = e.host
-        
+        task_id = e.taskId
+        stdout, stderr = get_std_logs(task_id, app_host)
+        if stdout:
+            logfiles.append(('stdout.txt', stdout))
+        if stderr:
+            logfiles.append(('stderr.txt', stderr))
     except Exception as oops:
-            log.execption("Error while attaching logs.")    
+        log.error("Error while attaching logs.")
+
     body = render('redalert.html', jinjacontext)
-    send_mail_alert(subj, body)
+    send_mail_alert(subj, body, logfiles)
 
 
 def alert_multiple(eventlist):
-    subj_template = "still failing : {appid} ({envname})"
+    subj_template = "marathon application is still failing : {appid} ({envname})"
     appid = eventlist[0].appId
     subj = subj_template.format(appid=appid, envname=envname)
     jinjacontext = {
@@ -140,21 +150,24 @@ def alert_status(eventlist):
 
 
 @spawnthread
-def send_mail_alert(subj, body):
+def send_mail_alert(subj, body, attachments=[]):
+    """
+    eg: attachments = [('log.txt','hey this is a log file'), (filename, content)]
+    """
     log.info('preparing mail .....')
     # with open('_mail.html','w') as f:
     #     f.write(body)
+    ec = EmailCore()
+    ec.set_mailheader(subject=subj, toaddrlist=to_addrlist, fromaddr=from_addr,
+                        cclist=cc_addrlist, bcclist=bcc_addrlist)
+    ec.set_recipients(to_addrlist)
+    ec.prepare_html_body(body)
+    for att in attachments:
+        ec.attach_file_content(*att)
+
     try:
         trial_count = 0
-
-        ec = EmailCore()
-        ec.set_mailheader(subject=subj, toaddrlist=to_addrlist, fromaddr=from_addr,
-                          cclist=cc_addrlist, bcclist=bcc_addrlist)
-        ec.set_recipients(to_addrlist)
-        ec.prepare_html_body(body)
-
         log.info("sending mail to " + str(to_addrlist) + " via " + smtp_host + ":" + str(smtp_port))
-
         while trial_count < 10:
             try:
                 trial_count += 1

@@ -7,6 +7,7 @@ from email import encoders
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from email.mime.application import MIMEApplication
 
 
 class MailException(Exception):
@@ -46,6 +47,11 @@ class EmailCore(object):
         _html_mime = MIMEText(html_template, 'html')
         if self.mail:
             self.mail.attach(_html_mime)
+
+    def attach_file_content(self, filename, data):
+        part = MIMEApplication(data, Name=filename)
+        part['Content-Disposition'] = 'attachment; filename="%s"' % filename
+        self.mail.attach(part)
 
     def send(self, host, port, user=None, password=None, auth=None):
         if not self.recipients_list:
