@@ -1,8 +1,11 @@
-from marathonevents import EventFactory, MarathonStatusUpdateEvent
-from logger import log
 import BaseHTTPServer
-import time
-from appstatusmonitor import AppStatusRecorder
+
+from .marathonevents import EventFactory, MarathonStatusUpdateEvent
+from .appstatusmonitor import AppStatusRecorder
+from .logger import LoggerFactory
+
+
+logger = LoggerFactory.get_logger()
 event_factory = EventFactory()
 
 
@@ -17,10 +20,10 @@ class EventHandler (BaseHTTPServer.BaseHTTPRequestHandler):
         event = event_factory.process(data)
 
         if event is None:
-            log.warn("invalid event data received")
+            logger.warn("invalid event data received")
 
         if isinstance(event, MarathonStatusUpdateEvent):
-            log.info("STATUS:" + event.tojson())
+            logger.debug("STATUS:" + event.tojson())
             AppStatusRecorder.add_event(event)
 
         # elif:  add here other event flows
@@ -28,7 +31,7 @@ class EventHandler (BaseHTTPServer.BaseHTTPRequestHandler):
 
         else:
             # some events are unhandled.
-            log.warn('unaccounted event : ' + repr(event))
+            logger.warn('unaccounted event : ' + repr(event))
 
         self.send_response(201)
         self.send_header('Content-type', 'application/json')

@@ -6,9 +6,12 @@ import time
 import jinja2
 
 from .mailalert import EmailCore
-from .logger import log
+from .logger import LoggerFactory
 from .utils import spawnthread
 from .log_fetcher import get_std_logs
+
+logger = LoggerFactory.get_logger()
+
 
 template_loc = os.path.join(
     os.path.dirname(os.path.dirname(__file__)), "email_templates")
@@ -54,7 +57,7 @@ def parse_conf(path):
         smtp_auth = conf['smtp'].get('auth')
 
     except Exception as e:
-        log.error("Parsing configuration failed.")
+        logger.exception("Parsing configuration failed.")
         sys.exit(-2)
 
 
@@ -109,29 +112,30 @@ def alert_this_event(e):
     }
 
     # if e.taskStatus in ['TASK_LOST', 'TASK_FAILED']:
+    app_host = e.host
+    task_id = e.taskId
+    logger.info('alerting failure of  %s at %s', task_id, app_host)
     logfiles = []
     try:
-        app_host = e.host
-        task_id = e.taskId
         stdout, stderr = get_std_logs(task_id, app_host)
         if stdout:
             logfiles.append(('stdout.txt', stdout))
         if stderr:
             logfiles.append(('stderr.txt', stderr))
     except Exception as oops:
-        log.error("Error while attaching logs.")
+        logger.exception("exception while fetching logs.")
 
     body = render('redalert.html', jinjacontext)
     send_mail_alert(subj, body, logfiles)
 
 
 def alert_multiple(eventlist):
-    subj_template = "marathon application is still failing : {appid} ({envname})"
+    subj_template = "[{envname}] marathon application is still failing : {appid}"
     appid = eventlist[0].appId
     subj = subj_template.format(appid=appid, envname=envname)
     jinjacontext = {
         'marathonurl': "http://%s:8080/ui/#/apps%s" % (hostname, appid),
-        'title': "Appication have been failed multiple times",
+        'title': "Appication has been failed multiple times",
         'appid': appid,
         'eventlist': eventlist,
         'TERMINAL_STATES': TERMINAL_STATES
@@ -154,12 +158,12 @@ def send_mail_alert(subj, body, attachments=[]):
     """
     eg: attachments = [('log.txt','hey this is a log file'), (filename, content)]
     """
-    log.info('preparing mail .....')
+    logger.info('preparing mail ..... attchement_count = %s', len(attachments))
     # with open('_mail.html','w') as f:
     #     f.write(body)
     ec = EmailCore()
     ec.set_mailheader(subject=subj, toaddrlist=to_addrlist, fromaddr=from_addr,
-                        cclist=cc_addrlist, bcclist=bcc_addrlist)
+                      cclist=cc_addrlist, bcclist=bcc_addrlist)
     ec.set_recipients(to_addrlist)
     ec.prepare_html_body(body)
     for att in attachments:
@@ -167,18 +171,18 @@ def send_mail_alert(subj, body, attachments=[]):
 
     try:
         trial_count = 0
-        log.info("sending mail to " + str(to_addrlist) + " via " + smtp_host + ":" + str(smtp_port))
+        logger.info("sending mail to " + str(to_addrlist) + " via " + smtp_host + ":" + str(smtp_port))
         while trial_count < 10:
             try:
                 trial_count += 1
                 resp = ec.send(smtp_host, smtp_port, smtp_user, smtp_password, smtp_auth)
-                log.info('mail alert submitted successfully (total tries = %s , failed recipients: %s) '
-                         % (trial_count, resp))
+                logger.info('mail alert submitted successfully (total tries = %s , failed recipients: %s) '
+                            % (trial_count, resp))
                 return
             except Exception as oops:
                 time.sleep(MAIL_RETRY_INTERVAL)
         # if here, mail was failed to submit after MAIL_RETRY_INTERVAL. reraise exception
         raise
     except Exception as oops:
-        log.error("Error occured during sending mail alert (total tries = %s)" % trial_count)
+        logger.exception("Error occured during sending mail alert (total tries = %s)" % trial_count)
         pass

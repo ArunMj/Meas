@@ -1,8 +1,8 @@
 import json
-from logger import log
+from .logger import LoggerFactory
+from .utils import conv_datestring
 
-from utils import conv_datestring
-
+logger = LoggerFactory.get_logger()
 
 class MarathonEventBase(object):
     """
@@ -171,4 +171,4 @@ class EventFactory:
             else:
                 raise Exception('Unknown event_type: {}, data: {}'.format(event_type, event_json))
         except Exception as oops:
-            log.error("Could not process event data")
+            logger.exception("Could not process event data")

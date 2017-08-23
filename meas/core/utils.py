@@ -1,6 +1,5 @@
 from datetime import datetime as dt
 from os import path
-import sys
 import threading
 
 

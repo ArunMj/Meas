@@ -1,10 +1,9 @@
 import requests
-from urllib import quote
 import os.path
-marathon_url = "http://localhost:8080"
-from pprint import pprint
+
 
 # def get_marathon_info(host, port, url_pattern="http://{host}:{port}/v2/info", **request_params):
+# marathon_url = "http://localhost:8080"
 #     info_api = url_pattern.format(host=host, port=port)
 #     return requests.get(info_api, **request_params).json()
 

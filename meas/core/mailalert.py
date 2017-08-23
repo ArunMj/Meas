@@ -1,10 +1,4 @@
-import mimetypes
-import os
-import re
 import smtplib
-
-from email import encoders
-from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
@@ -21,7 +15,7 @@ class EmailCore(object):
         self._isheaderOK = False
         self.recipients_list = None
 
-    def set_mailheader(self, subject, fromaddr, toaddrlist, cclist=[], bcclist=[]):
+    def set_mailheader(self, subject, fromaddr, toaddrlist, cclist=(), bcclist=()):
 
         self.mail['Subject'] = subject
         self.mail['To'] = ','.join(self._makelist(toaddrlist))

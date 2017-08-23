@@ -1,50 +1,31 @@
-import traceback
-import sys
 import logging
-import os
 from logging.handlers import TimedRotatingFileHandler
-import threading
 
+class LoggerFactory(object):
+    _logger = None
 
-class LOG(object):
-    def __init__(self, loggername, logfile):
-        self.logger = logging.getLogger(loggername)
-        self.logger.setLevel(logging.INFO)
+    @classmethod
+    def init(cls, logfile, loggername='measlogger', level=logging.INFO):
+        if cls._logger:
+            return
+        cls._logger = logging.getLogger(loggername)
+        cls._logger.setLevel(level)
+
+        formatter = logging.Formatter("%(asctime)-10s %(name)-10s [%(threadName)s] %(levelname)-5s %(message)-30s")
+
         fileLogHandler = TimedRotatingFileHandler(logfile, 'midnight', 1, 31)
-        fileLogHandler.setLevel(logging.INFO)
-        logOutputFormat = logging.Formatter("%(asctime)-10s %(name)-10s %(levelname)-5s %(message)-30s")
-        fileLogHandler.setFormatter(logOutputFormat)
-        self.logger.addHandler(fileLogHandler)
+        fileLogHandler.setLevel(level)
+        fileLogHandler.setFormatter(formatter)
 
-    def info(self, p, *args):
-        self.logger.info(p)
-        sys.stdout.write(p + '\n')
+        ch = logging.StreamHandler()
+        ch.setLevel(level)
+        ch.setFormatter(formatter)
 
-    def debug(self, p, *args):
-        self.logger.debug(p)
-        sys.stdout.write("****[" + threading.current_thread().getName() + "] ---- " + p + '\n')
+        cls._logger.addHandler(ch)
+        cls._logger.addHandler(fileLogHandler)
 
-    def warn(self, p, *args):
-        self.logger.warn(p)
-        sys.stdout.write(p + '\n')
-
-    def error(self, p, *args):
-        self.logger.exception(p)
-        sys.stderr.write(p + '\n')
-        traceback.print_exc()
-
-
-log = None
-
-
-def set_logger(filepath):
-    try:
-        global log
-        log = LOG('measlogger', filepath)
-        print "logs will be saved in " + filepath
-    except Exception as oops:
-        print 'logger', oops, 'deafult log file <meas.log> will be used'
-        log = LOG('measlogger', 'meas.log')
-
-
-__all__ = [log]
+    @classmethod
+    def get_logger(cls):
+        if not cls._logger:
+            raise("logger not initialized")
+        return cls._logger
