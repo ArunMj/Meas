@@ -61,7 +61,7 @@ def get_std_logs(task_id, agent_host='localhost', agent_port='5051'):
     return stdout, stderr
 
 
-if __name__ == '__main__':
+# if __name__ == '__main__':
     # minfo = get_marathon_info('192.168.150.17', 8080, auth=('flyuser', 'flypassWORD'))
     # mesos_leader_ui_url = minfo['marathon_config']['mesos_leader_ui_url']
     # task_id = 'neon_apps_dk_ostrich-uploader.afe2ef76-8709-11e7-befb-001a4af92888'
@@ -70,4 +70,4 @@ if __name__ == '__main__':
     # mesos-dns.fdf76ab5-83e1-11e7-a106-001a4af92888
     # fw: 165693b7-ff32-4df2-8987-98e799cec803-0001
 
-    print get_std_logs('registry.f0c7814a-87e0-11e7-ba65-001a4af92888', '192.168.150.18')
+    # print get_std_logs('registry.f0c7814a-87e0-11e7-ba65-001a4af92888', '192.168.150.18')

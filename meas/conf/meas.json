@@ -1,7 +1,7 @@
 {
 
     "envname": "Infra env",
-    "timewindow": 30,
+    "timewindow": 120,
 
     "email": {
         "from": "infra_env",

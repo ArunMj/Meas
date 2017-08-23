@@ -28,7 +28,7 @@ class AppStatusRecorder(object):
         app_id = event.appId
         # event_time = event.timestamp
         cls.event_bucket[app_id].append(event)
-        logger.info("added to record : " + repr(event) + " - " + event.taskStatus)
+        logger.info("added to record : %r - %s - %s", event, event.appId, event.taskStatus)
 
         if event.taskStatus in TERMINAL_STATES:
             last_alert_time = cls.alerthistory.get(app_id, None)

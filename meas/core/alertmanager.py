@@ -142,6 +142,7 @@ def alert_multiple(eventlist):
     }
 
     # if e.taskStatus in ['TASK_LOST', 'TASK_FAILED']:
+    logger.info('alerting multiple failures of "%s"', appid)
     body = render('multiple.html', jinjacontext)
     send_mail_alert(subj, body)
 
